@@ -127,3 +127,12 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# custom ignore
+
+.gitignore
+.DS_Store
+alex_attendance.py
+auto_attenance_bot
+auto_attendance.py
+screenshot.*.png
