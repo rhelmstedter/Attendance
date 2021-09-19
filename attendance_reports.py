@@ -71,15 +71,15 @@ def print_report():
     pag.moveTo(print_icon)
     pag.click()
 
-    time.sleep(2)
+    time.sleep(4)
     print_button = pag.locateCenterOnScreen("./print_button.png", confidence=0.7)
     pag.moveTo(print_button)
     pag.click()
+    time.sleep(5)
 
 
 def logout(driver, wait):
     """ logout of SIS and quit browser """
-    time.sleep(4)
     logout = wait.until(EC.element_to_be_clickable((By.ID, "logoutbtn")))
     logout.click()
     driver.quit()
