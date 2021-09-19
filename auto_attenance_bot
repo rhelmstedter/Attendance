@@ -1,0 +1,2 @@
+#!/bin/sh
+python3 /Users/russell/Documents/Attendance/auto_attendance.py
