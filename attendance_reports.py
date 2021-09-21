@@ -1,5 +1,4 @@
 #! python3
-
 from datetime import date, timedelta
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -33,7 +32,7 @@ def check_day():
     """ checks what day of the week the script is run. Then calculates back to the previous monday
     :returns: end of week and beginning of the week formatted as strings
     """
-    tday = date.today() - timedelta(days=2)
+    tday = date.today()
     week_day = tday.weekday()
     today_string = tday.strftime("%m%d%Y")
     beginning_of_week_string = (tday-timedelta(days=week_day)).strftime("%m%d%Y")
@@ -65,7 +64,6 @@ def print_report():
     """Uses pyautogui to click the print buttons. Couldn't get it to work with selenium
     :returns: none
     """
-
     time.sleep(4)
     print_icon = pag.locateCenterOnScreen("./print_icon.png", confidence=0.7)
     pag.moveTo(print_icon)
@@ -84,27 +82,35 @@ def logout(driver, wait):
     logout.click()
     driver.quit()
 
+
 def main():
-    print("Retrieving attendance reports...")
-    with tqdm(total=100) as pbar:
+    print("Retrieving attendance reports...\n")
+    with tqdm(total=100, desc='Initializing', colour='#98be65') as pbar:
 
         # Get credentials from environment
         USERNAME = os.environ.get("Q_USERNAME")
         PASSWORD = os.environ.get("Q_PASSWORD")
-
-        #set driver
+        # Set Driver
         driver = webdriver.Chrome()
         wait = WebDriverWait(driver, 10)
         pbar.update(10)
 
+        pbar.set_description('Logging into Q')
         login(driver, USERNAME, PASSWORD)
         pbar.update(20)
+        
+        pbar.set_description('Checking Date')
         week_start, week_end = check_day()
-        pbar.update(15)
+        pbar.update(10)
+        
+        pbar.set_description('Generating Reports')
         generate_report(driver, wait, week_start, week_end)
         pbar.update(35)
+
+        pbar.set_description('Printing Reports')
         print_report()
-        pbar.update(20)
+        pbar.update(25)
+
     print("\nAttendence reports have been printed. Please head to the office to sign them.")
 
 
