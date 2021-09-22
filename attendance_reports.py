@@ -18,11 +18,11 @@ def initializing():
     return driver, wait
 
 
-def login(driver, USERNAME, PASSWORD):
+def login(driver, USERNAME, PASSWORD, URL):
     """ Opens SIS and logs in
     :returns: none
     """
-    driver.get("http://venturausd.vcoe.org/q/vcsplash.aspx")
+    driver.get(URL)
     driver.find_element_by_id("login").click()
     handles = driver.window_handles
     driver.switch_to.window(handles[1])  # switch to login window
@@ -96,14 +96,14 @@ def main():
         # Get credentials from environment
         USERNAME = os.environ.get("Q_USERNAME")
         PASSWORD = os.environ.get("Q_PASSWORD")
-        # Set Driver
+        URL = os.environ.get("Q_URL")
 
         pbar.set_description('Initializing')
         driver, wait = initializing()
         pbar.update(5)
 
         pbar.set_description('Logging into Q')
-        login(driver, USERNAME, PASSWORD)
+        login(driver, USERNAME, PASSWORD, URL)
         pbar.update(20)
         
         pbar.set_description('Checking Date')
