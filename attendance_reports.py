@@ -12,6 +12,12 @@ import time
 from tqdm import tqdm
 
 
+def initializing():
+    driver = webdriver.Chrome()
+    wait = WebDriverWait(driver, 10)
+    return driver, wait
+
+
 def login(driver, USERNAME, PASSWORD):
     """ Opens SIS and logs in
     :returns: none
@@ -48,7 +54,6 @@ def generate_report(driver, wait, week_start, week_end):
     time.sleep(5)
     track_dropdown = Select(driver.find_element_by_id('optionfilterTrack'))
     track_dropdown.select_by_visible_text("T dean - De Anza Academy of Tech & Arts")
-
     driver.find_element_by_id("optionDateRangeType_5").click()
     end_date = driver.find_element_by_id("optionEffDateEnd")
     end_date.send_keys(Keys.CONTROL + 'a')
@@ -85,15 +90,17 @@ def logout(driver, wait):
 
 def main():
     print("Retrieving attendance reports...\n")
-    with tqdm(total=100, desc='Initializing', colour='#98be65') as pbar:
+
+    with tqdm(total=100, colour='#98be65') as pbar:
 
         # Get credentials from environment
         USERNAME = os.environ.get("Q_USERNAME")
         PASSWORD = os.environ.get("Q_PASSWORD")
         # Set Driver
-        driver = webdriver.Chrome()
-        wait = WebDriverWait(driver, 10)
-        pbar.update(10)
+
+        pbar.set_description('Initializing')
+        driver, wait = initializing()
+        pbar.update(5)
 
         pbar.set_description('Logging into Q')
         login(driver, USERNAME, PASSWORD)
@@ -101,15 +108,19 @@ def main():
         
         pbar.set_description('Checking Date')
         week_start, week_end = check_day()
-        pbar.update(10)
+        pbar.update(5)
         
         pbar.set_description('Generating Reports')
         generate_report(driver, wait, week_start, week_end)
-        pbar.update(35)
+        pbar.update(40)
 
         pbar.set_description('Printing Reports')
         print_report()
-        pbar.update(25)
+        pbar.update(30)
+
+        pbar.set_description('Logging Out')
+        logout(driver, wait)
+        pbar.update(5)
 
     print("\nAttendence reports have been printed. Please head to the office to sign them.")
 
