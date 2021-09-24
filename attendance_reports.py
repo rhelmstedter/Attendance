@@ -7,21 +7,27 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.support.ui import WebDriverWait
+from tqdm import tqdm
 import os
 import pyautogui as pag
+import sys
 import time
-from tqdm import tqdm
 
 
-pbar = tqdm(total=100, colour='#98be65')
+pbar = tqdm(total=100, colour="#98be65", file=sys.stdout)
+
 
 def pbar_updater(pbar, description, progress):
     def decorator(function):
-        pbar.set_description(description)
+        @wraps(function)
         def wrapper(*args, **kwargs):
-            return function(*args, **kwargs)
+            pbar.set_description(description)
+            result = function(*args, **kwargs)
+            pbar.update(progress)
+            return result
+
         return wrapper
-    pbar.update(progress)
+
     return decorator
 
 
@@ -34,7 +40,7 @@ def initialize():
 
 @pbar_updater(pbar, "Logging Into Q", 20)
 def login(driver, USERNAME, PASSWORD, URL):
-    """ Opens SIS and logs in
+    """Opens SIS and logs in
     :returns: none
     """
     driver.get(URL)
@@ -51,32 +57,34 @@ def login(driver, USERNAME, PASSWORD, URL):
 
 @pbar_updater(pbar, "Checking Date", 10)
 def check_day():
-    """ checks what day of the week the script is run. Then calculates back to the previous monday
+    """checks the day of the week then calculates back to Monday
     :returns: end of week and beginning of the week formatted as strings
     """
     tday = date.today()
     week_day = tday.weekday()
     today_string = tday.strftime("%m%d%Y")
-    beginning_of_week_string = (tday-timedelta(days=week_day)).strftime("%m%d%Y")
+    beginning_of_week_string = (tday - timedelta(days=week_day)).strftime("%m%d%Y")
     return beginning_of_week_string, today_string
 
 
 @pbar_updater(pbar, "Generating Report", 35)
 def generate_report(driver, wait, week_start, week_end):
-    """navigates to the report page and generates the report. 
+    """navigates to the report page in the SIS and generates the report.
     :returns: none
     """
-    attendance_report_page = wait.until(EC.element_to_be_clickable((By.LINK_TEXT, "Class Attendance Spreadsheet Rpt")))
+    attendance_report_page = wait.until(
+        EC.element_to_be_clickable((By.LINK_TEXT, "Class Attendance Spreadsheet Rpt"))
+    )
     attendance_report_page.click()
     time.sleep(5)
-    track_dropdown = Select(driver.find_element_by_id('optionfilterTrack'))
+    track_dropdown = Select(driver.find_element_by_id("optionfilterTrack"))
     track_dropdown.select_by_visible_text("T dean - De Anza Academy of Tech & Arts")
     driver.find_element_by_id("optionDateRangeType_5").click()
     end_date = driver.find_element_by_id("optionEffDateEnd")
-    end_date.send_keys(Keys.CONTROL + 'a')
+    end_date.send_keys(Keys.CONTROL + "a")
     end_date.send_keys(week_end)
     begin_date = driver.find_element_by_id("optionEffDateStart")
-    begin_date.send_keys(Keys.CONTROL + 'a')
+    begin_date.send_keys(Keys.CONTROL + "a")
     begin_date.send_keys(week_start)
     time.sleep(2)
     wait.until(EC.element_to_be_clickable((By.ID, "ReportMasterPrintBtn"))).click()
@@ -101,7 +109,7 @@ def print_report():
 
 @pbar_updater(pbar, "Logging Out", 5)
 def logout(driver, wait):
-    """ logout of SIS and quit browser """
+    """logout of SIS and quit browser"""
     logout = wait.until(EC.element_to_be_clickable((By.ID, "logoutbtn")))
     logout.click()
     driver.quit()
@@ -109,7 +117,6 @@ def logout(driver, wait):
 
 if __name__ == "__main__":
 
-    print("Retrieving attendance reports...\n")
     # Get credentials from environment
     USERNAME = os.environ.get("Q_USERNAME")
     PASSWORD = os.environ.get("Q_PASSWORD")
@@ -121,6 +128,7 @@ if __name__ == "__main__":
     generate_report(driver, wait, week_start, week_end)
     print_report()
     logout(driver, wait)
-    print("\nAttendence reports have been printed. Please head to the office to sign them.")
+    pbar.write(
+        "\nAttendence reports have been printed. Please head to the office to sign them."
+    )
     pbar.close()
-
